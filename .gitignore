@@ -1,0 +1,10 @@
+# Environment
+venv4*
+
+# Data
+dataset
+
+# Training
+train/mask
+train/class/MyUnet
+*.h5
