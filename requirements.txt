@@ -1,4 +1,4 @@
-# tensorflow==2.4.0
+https://github.com/bitsy-ai/tensorflow-arm-bin/releases/download/v2.4.0-rc4/tensorflow-2.4.0rc4-cp37-none-linux_armv7l.whl
 opencv-python
 scikit-image
 pycocotools
