@@ -1,5 +1,6 @@
 import cv2
 import time
+import argparse
 import numpy as np
 from threading import Thread
 from model.simple_CNN import SimpleCNN
@@ -108,6 +109,11 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sleep",  type=int, default=1, help="The second of time.sleep() between every prediction.")
+    parser.add_argument("--imshow", action="store_true", help="Open another windows to show webcam stream or not.")
+    opt = parser.parse_args()
+
     model = SimpleCNN(dropout=0)
     model.build(input_shape=(None, 640, 480, 3))
     model.load_weights("weights.h5")
@@ -115,8 +121,7 @@ if __name__ == "__main__":
     t0 = time.time()
     for path, img, im0s, vid_cap in LoadStreams():
 
-        # time.sleep(1)
-
+        time.sleep(opt.sleep)
         t1 = time.time()
 
         img = np.array(img, dtype=np.float32)
@@ -130,9 +135,10 @@ if __name__ == "__main__":
         t3 = time.time()
 
         # Stream results
-        cv2.imshow(path[0], im0s[0])
-        if cv2.waitKey(1) == ord("q"):  # q to quit
-            raise StopIteration
+        if opt.imshow:
+            cv2.imshow(path[0], im0s[0])
+            if cv2.waitKey(1) == ord("q"):  # q to quit
+                raise StopIteration
 
         total_cost_str  = f"Total cost time: {t3-t1:.3f}s"
         fps_str         = f"FPS: {1/(t3-t1):.3f}"
