@@ -106,6 +106,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
 if __name__ == "__main__":
 
     model = SimpleCNN(dropout=0)
+    model.build(input_shape=(None, 640, 480, 3))
     model.load_weights("weights.h5")
 
     t0 = time.time()
