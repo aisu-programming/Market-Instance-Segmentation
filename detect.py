@@ -140,10 +140,12 @@ if __name__ == "__main__":
             cv2.imshow(path[0], im0s[0])
             if cv2.waitKey(1) == ord("q"):  # q to quit
                 raise StopIteration
+        t5 = time.time()
 
-        total_cost_str  = f"Total cost time: {t4-t1:.3f}s"
-        fps_str         = f"FPS: {1/(t4-t1):.3f}"
+        total_cost_str  = f"Total cost time: {t5-t1:.3f}s"
+        fps_str         = f"FPS: {1/(t5-t1):5.2f}"
         sleep_time_str  = f"Sleep time: {t2-t1:.3f}s"
         img_process_str = f"Image process time: {t3-t2:.3f}s"
         pred_str        = f"Prediction time: {t4-t3:.3f}s"
-        print(f"Prediction: {prediction}. ({total_cost_str} / {fps_str} / {sleep_time_str} / {img_process_str} / {pred_str})")
+        imshow_str      = f"Image show time: {t5-t4:.3f}s"
+        print(f"Prediction: {prediction}. ({total_cost_str} / {fps_str} / {sleep_time_str} / {img_process_str} / {pred_str} / {imshow_str})")
