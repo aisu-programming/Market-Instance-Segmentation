@@ -1,6 +1,7 @@
 # Environment
 venv4*
 *.pyc
+*.whl
 
 # Data
 dataset
