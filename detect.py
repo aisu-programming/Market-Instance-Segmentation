@@ -112,6 +112,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sleep",  type=int, default=1, help="The second of time.sleep() between every prediction.")
     parser.add_argument("--imshow", action="store_true", help="Open another windows to show webcam stream or not.")
+    parser.add_argument("--conf", action="store_true", help="Display confidences of each classes.")
     opt = parser.parse_args()
 
     model = SimpleCNN(dropout=0)
@@ -132,7 +133,8 @@ if __name__ == "__main__":
         # Prediction
         t3 = time.time()
         prediction = model(img)[0]
-        # prediction = ["Full", "Less", "Empty"][np.argmax(prediction)]
+        if not opt.conf:
+            prediction = ["Full", "Less", "Empty"][np.argmax(prediction)]
         t4 = time.time()
 
         # Stream results
@@ -148,4 +150,4 @@ if __name__ == "__main__":
         img_process_str = f"Image process time: {t3-t2:.3f}s"
         pred_str        = f"Prediction time: {t4-t3:.3f}s"
         imshow_str      = f"Image show time: {t5-t4:.3f}s"
-        print(f"Prediction: {prediction}. ({total_cost_str} / {fps_str} / {sleep_time_str} / {img_process_str} / {pred_str} / {imshow_str})")
+        print(f"Prediction: {prediction:>5}. ({total_cost_str} / {fps_str} / {sleep_time_str} / {img_process_str} / {pred_str} / {imshow_str})")
