@@ -121,18 +121,19 @@ if __name__ == "__main__":
     t0 = time.time()
     for path, img, im0s, vid_cap in LoadStreams():
 
-        time.sleep(opt.sleep)
         t1 = time.time()
+        time.sleep(opt.sleep)
+        t2 = time.time()
 
         img = np.array(img, dtype=np.float32)
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
         # img = np.expand_dims(img, axis=0)
 
         # Prediction
-        t2 = time.time()
+        t3 = time.time()
         prediction = model(img)[0]
         # prediction = ["Full", "Less", "Empty"][np.argmax(prediction)]
-        t3 = time.time()
+        t4 = time.time()
 
         # Stream results
         if opt.imshow:
@@ -140,8 +141,9 @@ if __name__ == "__main__":
             if cv2.waitKey(1) == ord("q"):  # q to quit
                 raise StopIteration
 
-        total_cost_str  = f"Total cost time: {t3-t1:.3f}s"
-        fps_str         = f"FPS: {1/(t3-t1):.3f}"
-        img_process_str = f"Image process time: {t2-t1:.3f}s"
-        pred_str        = f"Prediction time: {t3-t2:.3f}s"
-        print(f"Prediction: {prediction}. ({total_cost_str} / {fps_str} / {img_process_str} / {pred_str})")
+        total_cost_str  = f"Total cost time: {t4-t1:.3f}s"
+        fps_str         = f"FPS: {1/(t4-t1):.3f}"
+        sleep_time_str  = f"Sleep time: {t2-t1:.3f}s"
+        img_process_str = f"Image process time: {t3-t2:.3f}s"
+        pred_str        = f"Prediction time: {t4-t3:.3f}s"
+        print(f"Prediction: {prediction}. ({total_cost_str} / {fps_str} / {sleep_time_str} / {img_process_str} / {pred_str})")
