@@ -7,4 +7,4 @@ dataset
 # Training
 train/mask
 train/class/MyUnet
-*.h5
+train/*/*/*/*.h5
