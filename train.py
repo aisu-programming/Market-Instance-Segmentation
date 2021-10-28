@@ -73,13 +73,13 @@ class Trainer():
             ),
             tf.keras.callbacks.ModelCheckpoint(
                 filepath = self.log_dir + "/val_loss.h5", verbose=1,
-                monitor="validation/loss",
-                save_best_only=True, save_weights_only=True,
+                monitor="validation/loss", save_best_only=True,
+                # save_weights_only=True,
             ),
             tf.keras.callbacks.ModelCheckpoint(
                 filepath = self.log_dir + "/val_acc.h5", verbose=1,
-                monitor="validation/accuracy",
-                save_best_only=True, save_weights_only=True,
+                monitor="validation/accuracy", save_best_only=True,
+                # save_weights_only=True,
             ),
         ]
         for callback in self.callbacks: callback.set_model(self.model)
