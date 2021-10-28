@@ -1,13 +1,2 @@
-# Environment
-venv4*
 *.pyc
-*.whl
 *.zip
-
-# Data
-dataset
-
-# Training
-train/mask
-train/class/MyUnet
-train/*/*/*/*.h5
