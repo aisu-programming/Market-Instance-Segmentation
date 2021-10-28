@@ -2,6 +2,7 @@ import cv2
 import time
 import argparse
 import numpy as np
+import tensorflow as tf
 from threading import Thread
 from model.simple_CNN import SimpleCNN
 
@@ -117,6 +118,7 @@ if __name__ == "__main__":
 
     model = SimpleCNN(dropout=0)
     model.build(input_shape=(None, 640, 480, 3))
+    # model = tf.keras.Model()
     model.load_weights("weights.h5")
 
     t0 = time.time()

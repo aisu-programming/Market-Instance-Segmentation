@@ -92,8 +92,8 @@ class Trainer():
         with tf.GradientTape() as tape:
             logits = self.model(img, training=True)
             loss_value = self.loss_fn(status, logits)
-        grads = tape.gradient(loss_value, self.model.trainable_weights)
-        self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
+        # grads = tape.gradient(loss_value, self.model.trainable_weights)
+        # self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
         self.train_loss_metric.update_state(loss_value)
         self.train_acc_metric.update_state(status, logits)
         return logits
@@ -201,8 +201,8 @@ if __name__ == "__main__":
     image_size = (480, 640)
     batch_size = 8
     Model = SimpleCNN(dropout=dropout)
-    # Model.build(input_shape=(None, 640, 480, 3))
-    # Model.load_weights("weights.h5")
+    Model.build(input_shape=(None, 640, 480, 3))
+    Model.load_weights("weights.h5")
 
     modelParameter = {
         "Model": Model,

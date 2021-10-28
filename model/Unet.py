@@ -1,5 +1,5 @@
 import tensorflow as tf
-from module import Mish, MyConv, CSPSPP
+from .module import Mish, MyConv, CSPSPP
 
 
 class Unet(tf.keras.Model):
