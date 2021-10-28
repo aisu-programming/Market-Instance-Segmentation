@@ -1,11 +1,12 @@
 import cv2
 import time
+import argparse
 import numpy as np
 from threading import Thread
 from model.simple_CNN import SimpleCNN
 
 
-def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True):
+def letterbox(img, new_shape, color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True):
     # Resize image to a 32-pixel-multiple rectangle https://github.com/ultralytics/yolov3/issues/232
     shape = img.shape[:2]  # current shape [height, width]
     if isinstance(new_shape, int):
@@ -39,27 +40,30 @@ def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scale
 
 
 class LoadStreams:  # multiple IP or RTSP cameras
-    def __init__(self, img_size=1280):
+    def __init__(self, img_size=(480, 640)):
+        self.mode = 'images'
         self.img_size = img_size
-        self.img = None
+
         sources = ['0']
+        n = len(sources)
+        self.imgs = [None] * n
         self.sources = sources
         for i, s in enumerate(sources):
             # Start the thread to read frames from the video stream
-            print('%g/%g: %s... ' % (i + 1, 0, s), end='')
-            cap = cv2.VideoCapture(0)
+            print('%g/%g: %s... ' % (i + 1, n, s), end='')
+            cap = cv2.VideoCapture(0 if s == '0' else s)
             assert cap.isOpened(), 'Failed to open %s' % s
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             fps = cap.get(cv2.CAP_PROP_FPS) % 100
-            _, self.img = cap.read()  # guarantee first frame
+            _, self.imgs[i] = cap.read()  # guarantee first frame
             thread = Thread(target=self.update, args=([i, cap]), daemon=True)
             print(' success (%gx%g at %.2f FPS).' % (w, h, fps))
             thread.start()
         print('')  # newline
 
         # check for common shapes
-        s = np.stack([letterbox(self.img, new_shape=self.img_size)[0].shape], 0)  # inference shapes
+        s = np.stack([letterbox(x, new_shape=self.img_size)[0].shape for x in self.imgs], 0)  # inference shapes
         self.rect = np.unique(s, axis=0).shape[0] == 1  # rect inference if all shapes equal
         if not self.rect:
             print('WARNING: Different stream shapes detected. For optimal performance supply similarly-shaped streams.')
@@ -69,10 +73,10 @@ class LoadStreams:  # multiple IP or RTSP cameras
         n = 0
         while cap.isOpened():
             n += 1
-            # _, self.img = cap.read()
+            # _, self.imgs[index] = cap.read()
             cap.grab()
             if n == 4:  # read every 4th frame
-                _, self.img = cap.retrieve()
+                _, self.imgs[index] = cap.retrieve()
                 n = 0
             time.sleep(0.01)  # wait time
 
@@ -82,28 +86,34 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
     def __next__(self):
         self.count += 1
-        img0 = self.img.copy()
+        img0 = self.imgs.copy()
         if cv2.waitKey(1) == ord('q'):  # q to quit
             cv2.destroyAllWindows()
             raise StopIteration
 
         # Letterbox
-        img = [letterbox(img0, new_shape=self.img_size, auto=self.rect)[0]]
+        img = [letterbox(x, new_shape=self.img_size, auto=self.rect)[0] for x in img0]
 
         # Stack
         img = np.stack(img, 0)
 
         # Convert
-        img = img[:, :, :, ::-1].transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
+        # img = img[:, :, :, ::-1].transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
         img = np.ascontiguousarray(img)
 
-        return self.sources, img, [img0], None
+        return self.sources, img, img0, None
 
     def __len__(self):
         return 0
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sleep",  type=int, default=1, help="The second of time.sleep() between every prediction.")
+    parser.add_argument("--imshow", action="store_true", help="Open another windows to show webcam stream or not.")
+    parser.add_argument("--conf", action="store_true", help="Display confidences of each classes.")
+    opt = parser.parse_args()
 
     model = SimpleCNN(dropout=0)
     model.build(input_shape=(None, 640, 480, 3))
@@ -113,24 +123,31 @@ if __name__ == "__main__":
     for path, img, im0s, vid_cap in LoadStreams():
 
         t1 = time.time()
+        time.sleep(opt.sleep)
+        t2 = time.time()
 
         img = np.array(img, dtype=np.float32)
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
-        img = np.expand_dims(img, axis=0)
+        # img = np.expand_dims(img, axis=0)
 
         # Prediction
-        t2 = time.time()
-        prediction = model(img)[0]
-        # prediction = ["Full", "Less", "Empty"][np.argmax(prediction)]
         t3 = time.time()
+        prediction = model(img)[0]
+        if not opt.conf:
+            prediction = ["Full", "Less", "Empty"][np.argmax(prediction)]
+        t4 = time.time()
 
         # Stream results
-        cv2.imshow(path[0], im0s[0])
-        if cv2.waitKey(1) == ord("q"):  # q to quit
-            raise StopIteration
+        if opt.imshow:
+            cv2.imshow(path[0], im0s[0])
+            if cv2.waitKey(1) == ord("q"):  # q to quit
+                raise StopIteration
+        t5 = time.time()
 
-        total_cost_str  = f"Total cost time: {t3-t1:.3f}s"
-        fps_str         = f"FPS: {1/(t3-t1):.3f}"
-        img_process_str = f"Image process time: {t2-t1:.3f}s"
-        pred_str        = f"Prediction time: {t3-t2:.3f}s"
-        print(f"Prediction: {prediction}. ({total_cost_str} / {fps_str} / {img_process_str} / {pred_str})")
+        total_cost_str  = f"Total cost time: {t5-t1:.3f}s"
+        fps_str         = f"FPS: {1/(t5-t1):5.2f}"
+        sleep_time_str  = f"Sleep time: {t2-t1:.3f}s"
+        img_process_str = f"Image process time: {t3-t2:.3f}s"
+        pred_str        = f"Prediction time: {t4-t3:.3f}s"
+        imshow_str      = f"Image show time: {t5-t4:.3f}s"
+        print(f"Prediction: {prediction:>5}. ({total_cost_str} / {fps_str} / {sleep_time_str} / {img_process_str} / {pred_str} / {imshow_str})")
