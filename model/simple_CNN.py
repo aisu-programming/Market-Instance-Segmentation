@@ -1,12 +1,13 @@
+import re
 import tensorflow as tf
 from .module import Mish
 
 
 class SimpleCNN(tf.keras.Model):
-    def __init__(self, dropout=None, class_num=4, depth=7):
+    def __init__(self, dropout=None, class_num=4, depth=5):
         super(SimpleCNN, self).__init__()
         self.depth = depth
-        fs = [ 16, 24, 32, 40, 48, 56, 64 ]
+        fs = [ 32, 64, 96, 112, 128 ]
         """ Backbone """
         self.cv = [
             tf.keras.layers.Conv2D(
@@ -19,10 +20,10 @@ class SimpleCNN(tf.keras.Model):
         """ Classifier """
         self.classifier = [
             tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(32, activation=Mish()),
-            tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Dropout(dropout),
-            tf.keras.layers.Dense(3, activation=tf.nn.softmax),
+            tf.keras.layers.Dense(192, activation=Mish()),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dense(1, activation=tf.nn.relu),
         ]
 
     @property
